@@ -11,12 +11,9 @@
 # set -g theme_hide_hostname yes
 # set -g theme_hide_hostname no
 # set -g default_user your_normal_user
-# set -g theme_svn_prompt_enabled yes
 
 set -g current_bg NONE
 set segment_separator \uE0B0
-set right_segment_separator \uE0B0
-set -q scm_prompt_blacklist; or set scm_prompt_blacklist
 
 # color settings
 
@@ -25,22 +22,14 @@ set -q scm_prompt_blacklist; or set scm_prompt_blacklist
 # they will fall back to a default if not set
 # ---
 
-set -q color_virtual_env_bg; or set color_virtual_env_bg white
-set -q color_virtual_env_str; or set color_virtual_env_str black
 set -q color_user_bg; or set color_user_bg black
 set -q color_user_str; or set color_user_str yellow
 set -q color_dir_bg; or set color_dir_bg blue
 set -q color_dir_str; or set color_dir_str black
-set -q color_hg_changed_bg; or set color_hg_changed_bg yellow
-set -q color_hg_changed_str; or set color_hg_changed_str black
-set -q color_hg_bg; or set color_hg_bg green
-set -q color_hg_str; or set color_hg_str black
 set -q color_git_dirty_bg; or set color_git_dirty_bg yellow
 set -q color_git_dirty_str; or set color_git_dirty_str black
 set -q color_git_bg; or set color_git_bg green
 set -q color_git_str; or set color_git_str black
-set -q color_svn_bg; or set color_svn_bg green
-set -q color_svn_str; or set color_svn_str black
 set -q color_status_nonzero_bg; or set color_status_nonzero_bg black
 set -q color_status_nonzero_str; or set color_status_nonzero_str red
 set -q color_status_superuser_bg; or set color_status_superuser_bg black
@@ -54,11 +43,6 @@ set -q color_status_private_str; or set color_status_private_str purple
 # ---
 
 set -q fish_git_prompt_untracked_files; or set fish_git_prompt_untracked_files normal
-
-# Subversion settings
-# ---
-
-set -q theme_svn_prompt_enabled; or set theme_svn_prompt_enabled no
 
 # helper methods
 # ---
@@ -78,12 +62,6 @@ function parse_git_dirty
     else
         echo -n "$__fish_git_prompt_char_cleanstate"
     end
-  end
-end
-
-function cwd_in_scm_blacklist
-  for entry in $scm_prompt_blacklist
-    pwd | grep "^$entry" -
   end
 end
 
@@ -134,23 +112,6 @@ end
 # theme components
 # ---
 
-function prompt_virtual_env -d "display Python or Nix virtual environment"
-  set envs
-
-  if test "$VIRTUAL_ENV"
-    set py_env (basename $VIRTUAL_ENV)
-    set envs $envs "py[$py_env]"
-  end
-
-  if test "$IN_NIX_SHELL"
-    set envs $envs "nix[$IN_NIX_SHELL]"
-  end
-
-  if test "$envs"
-    prompt_segment $color_virtual_env_bg $color_virtual_env_str (string join " " $envs)
-  end
-end
-
 function prompt_user -d "display current user if different from $default_user"
   if [ "$theme_display_user" = "yes" ]
     if [ "$USER" != "$default_user" -o -n "$SSH_CLIENT" ]
@@ -182,37 +143,6 @@ function prompt_dir -d "display the current directory"
   prompt_segment $color_dir_bg $color_dir_str (prompt_pwd)
 end
 
-
-function prompt_hg -d "display mercurial state"
-  set -l branch
-  set -l state
-  if command hg id >/dev/null 2>&1
-      set branch (command hg id -b)
-      # we use `hg bookmarks` as opposed to `hg id -B` because it marks
-      # the currently active bookmark with an asterisk.
-      # we use `sed` to isolate it
-      set bookmark (hg bookmarks | sed -nr 's/^.*\*\ +\b(\w*)\ +.*$/:\1/p')
-      set state (hg_get_state)
-      set revision (command hg id -n)
-      set branch_symbol \uE0A0
-      set prompt_text "$branch_symbol $branch$bookmark:$revision"
-      if [ "$state" = "0" ]
-          prompt_segment $color_hg_changed_bg $color_hg_changed_str $prompt_text " ±"
-      else
-          prompt_segment $color_hg_bg $color_hg_str $prompt_text
-      end
-  end
-end
-
-function hg_get_state -d "get mercurial working directory state"
-  if hg status | grep --quiet -e "^[A|M|R|!|?]"
-    echo 0
-  else
-    echo 1
-  end
-end
-
-
 function prompt_git -d "display the current git state"
   set -l ref
   set -l dirty
@@ -232,35 +162,6 @@ function prompt_git -d "display the current git state"
     end
   end
 end
-
-
-function prompt_svn -d "display the current svn state"
-  set -l ref
-  if command svn info >/dev/null 2>&1
-    set branch (svn_get_branch)
-    set branch_symbol \uE0A0
-    set revision (svn_get_revision)
-    prompt_segment $color_svn_bg $color_svn_str "$branch_symbol $branch:$revision"
-  end
-end
-
-function svn_get_branch -d "get the current branch name"
-  svn info 2> /dev/null | awk -F/ \
-      '/^URL:/ { \
-        for (i=0; i<=NF; i++) { \
-          if ($i == "branches" || $i == "tags" ) { \
-            print $(i+1); \
-            break;\
-          }; \
-          if ($i == "trunk") { print $i; break; } \
-        } \
-      }'
-end
-
-function svn_get_revision -d "get the current revision number"
-  svn info 2> /dev/null | sed -n 's/Revision:\ //p'
-end
-
 
 function prompt_status -d "symbols for nonzero exit code, root and background jobs"
     if [ $RETVAL -ne 0 ]
@@ -289,15 +190,8 @@ end
 function fish_prompt
   set -g RETVAL $status
   prompt_status
-  prompt_virtual_env
   prompt_user
   prompt_dir
-  if [ (cwd_in_scm_blacklist | wc -c) -eq 0 ]
-    type -q hg;  and prompt_hg
-    type -q git; and prompt_git
-    if [ "$theme_svn_prompt_enabled" = "yes" ]
-      type -q svn; and prompt_svn
-    end
-  end
+  type -q git; and prompt_git
   prompt_finish
 end
