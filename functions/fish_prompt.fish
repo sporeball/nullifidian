@@ -1,33 +1,29 @@
-# name: Agnoster
-# agnoster's Theme - https://gist.github.com/3712874
-# A Powerline-inspired theme for FISH
-#
-# # README
-#
-# In order for this theme to render correctly, you will need a
-# [Powerline-patched font](https://gist.github.com/1595572).
+# nullifidian
+# sporeball's fish theme,
+# forked from agnoster's theme - https://gist.github.com/3712874
+# ---
 
-## Set this options in your config.fish (if you want to :])
+# options
+# you can set these in your config.fish if you want
+# ---
+
 # set -g theme_display_user yes
 # set -g theme_hide_hostname yes
 # set -g theme_hide_hostname no
 # set -g default_user your_normal_user
 # set -g theme_svn_prompt_enabled yes
 
-
-
 set -g current_bg NONE
 set segment_separator \uE0B0
 set right_segment_separator \uE0B0
 set -q scm_prompt_blacklist; or set scm_prompt_blacklist
 
-# ===========================
-# Color setting
+# color settings
 
-# You can set these variables in config.fish like:
-# set -g color_dir_bg red
-# If not set, default color from agnoster will be used.
-# ===========================
+# you can set these variables in config.fish like so:
+#   set -g color_dir_bg red
+# they will fall back to a default if not set
+# ---
 
 set -q color_virtual_env_bg; or set color_virtual_env_bg white
 set -q color_virtual_env_str; or set color_virtual_env_str black
@@ -54,20 +50,18 @@ set -q color_status_jobs_str; or set color_status_jobs_str cyan
 set -q color_status_private_bg; or set color_status_private_bg black
 set -q color_status_private_str; or set color_status_private_str purple
 
-# ===========================
 # Git settings
-# set -g color_dir_bg red
+# ---
 
 set -q fish_git_prompt_untracked_files; or set fish_git_prompt_untracked_files normal
 
-# ===========================
 # Subversion settings
+# ---
 
 set -q theme_svn_prompt_enabled; or set theme_svn_prompt_enabled no
 
-# ===========================
-# Helper methods
-# ===========================
+# helper methods
+# ---
 
 set -g __fish_git_prompt_showdirtystate 'yes'
 set -g __fish_git_prompt_char_dirtystate '±'
@@ -93,11 +87,10 @@ function cwd_in_scm_blacklist
   end
 end
 
-# ===========================
-# Segments functions
-# ===========================
+# segment functions
+# ---
 
-function prompt_segment -d "Function to draw a segment"
+function prompt_segment -d "draw a segment"
   set -l bg
   set -l fg
   if [ -n "$argv[1]" ]
@@ -127,7 +120,7 @@ function prompt_segment -d "Function to draw a segment"
   end
 end
 
-function prompt_finish -d "Close open segments"
+function prompt_finish -d "close open segments"
   if [ -n $current_bg ]
     set_color normal
     set_color $current_bg
@@ -138,11 +131,10 @@ function prompt_finish -d "Close open segments"
 end
 
 
-# ===========================
-# Theme components
-# ===========================
+# theme components
+# ---
 
-function prompt_virtual_env -d "Display Python or Nix virtual environment"
+function prompt_virtual_env -d "display Python or Nix virtual environment"
   set envs
 
   if test "$VIRTUAL_ENV"
@@ -159,7 +151,7 @@ function prompt_virtual_env -d "Display Python or Nix virtual environment"
   end
 end
 
-function prompt_user -d "Display current user if different from $default_user"
+function prompt_user -d "display current user if different from $default_user"
   if [ "$theme_display_user" = "yes" ]
     if [ "$USER" != "$default_user" -o -n "$SSH_CLIENT" ]
       set USER (whoami)
@@ -179,25 +171,26 @@ function prompt_user -d "Display current user if different from $default_user"
   end
 end
 
-function get_hostname -d "Set current hostname to prompt variable $HOSTNAME_PROMPT if connected via SSH"
+function get_hostname -d "set current hostname to prompt variable $HOSTNAME_PROMPT if connected via SSH"
   set -g HOSTNAME_PROMPT ""
   if [ "$theme_hide_hostname" = "no" -o \( "$theme_hide_hostname" != "yes" -a -n "$SSH_CLIENT" \) ]
     set -g HOSTNAME_PROMPT (uname -n)
   end
 end
 
-function prompt_dir -d "Display the current directory"
+function prompt_dir -d "display the current directory"
   prompt_segment $color_dir_bg $color_dir_str (prompt_pwd)
 end
 
 
-function prompt_hg -d "Display mercurial state"
+function prompt_hg -d "display mercurial state"
   set -l branch
   set -l state
   if command hg id >/dev/null 2>&1
       set branch (command hg id -b)
-      # We use `hg bookmarks` as opposed to `hg id -B` because it marks
-      # currently active bookmark with an asterisk. We use `sed` to isolate it.
+      # we use `hg bookmarks` as opposed to `hg id -B` because it marks
+      # the currently active bookmark with an asterisk.
+      # we use `sed` to isolate it
       set bookmark (hg bookmarks | sed -nr 's/^.*\*\ +\b(\w*)\ +.*$/:\1/p')
       set state (hg_get_state)
       set revision (command hg id -n)
@@ -211,7 +204,7 @@ function prompt_hg -d "Display mercurial state"
   end
 end
 
-function hg_get_state -d "Get mercurial working directory state"
+function hg_get_state -d "get mercurial working directory state"
   if hg status | grep --quiet -e "^[A|M|R|!|?]"
     echo 0
   else
@@ -220,7 +213,7 @@ function hg_get_state -d "Get mercurial working directory state"
 end
 
 
-function prompt_git -d "Display the current git state"
+function prompt_git -d "display the current git state"
   set -l ref
   set -l dirty
   if command git rev-parse --is-inside-work-tree >/dev/null 2>&1
@@ -241,7 +234,7 @@ function prompt_git -d "Display the current git state"
 end
 
 
-function prompt_svn -d "Display the current svn state"
+function prompt_svn -d "display the current svn state"
   set -l ref
   if command svn info >/dev/null 2>&1
     set branch (svn_get_branch)
@@ -269,7 +262,7 @@ function svn_get_revision -d "get the current revision number"
 end
 
 
-function prompt_status -d "the symbols for a non zero exit status, root and background jobs"
+function prompt_status -d "symbols for nonzero exit code, root and background jobs"
     if [ $RETVAL -ne 0 ]
       prompt_segment $color_status_nonzero_bg $color_status_nonzero_str "✘"
     end
@@ -284,15 +277,14 @@ function prompt_status -d "the symbols for a non zero exit status, root and back
       prompt_segment $color_status_superuser_bg $color_status_superuser_str "⚡"
     end
 
-    # Jobs display
+    # jobs display
     if [ (jobs -l | wc -l) -gt 0 ]
       prompt_segment $color_status_jobs_bg $color_status_jobs_str "⚙"
     end
 end
 
-# ===========================
-# Apply theme
-# ===========================
+# apply theme
+# ---
 
 function fish_prompt
   set -g RETVAL $status
