@@ -16,28 +16,22 @@ set -g current_bg NONE
 set segment_separator \uE0B0
 
 # color settings
-
-# you can set these variables in config.fish like so:
-#   set -g color_dir_bg red
-# they will fall back to a default if not set
 # ---
 
-set -q color_user_bg; or set color_user_bg black
-set -q color_user_str; or set color_user_str yellow
-set -q color_dir_bg; or set color_dir_bg blue
-set -q color_dir_str; or set color_dir_str black
-set -q color_git_dirty_bg; or set color_git_dirty_bg yellow
-set -q color_git_dirty_str; or set color_git_dirty_str black
-set -q color_git_bg; or set color_git_bg green
-set -q color_git_str; or set color_git_str black
-set -q color_status_nonzero_bg; or set color_status_nonzero_bg black
-set -q color_status_nonzero_str; or set color_status_nonzero_str red
-set -q color_status_superuser_bg; or set color_status_superuser_bg black
-set -q color_status_superuser_str; or set color_status_superuser_str yellow
-set -q color_status_jobs_bg; or set color_status_jobs_bg black
-set -q color_status_jobs_str; or set color_status_jobs_str cyan
-set -q color_status_private_bg; or set color_status_private_bg black
-set -q color_status_private_str; or set color_status_private_str purple
+set -g color_user_bg black
+set -g color_user_str yellow
+set -g color_dir_bg blue
+set -g color_dir_str black
+set -g color_git_dirty_bg yellow
+set -g color_git_dirty_str black
+set -g color_git_bg green
+set -g color_git_str black
+set -g color_status_nonzero_bg red
+set -g color_status_nonzero_str black
+set -g color_status_superuser_bg black
+set -g color_status_superuser_str yellow
+set -g color_status_private_bg purple
+set -g color_status_private_str black
 
 # Git settings
 # ---
@@ -48,8 +42,7 @@ set -q fish_git_prompt_untracked_files; or set fish_git_prompt_untracked_files n
 # ---
 
 set -g __fish_git_prompt_showdirtystate 'yes'
-set -g __fish_git_prompt_char_dirtystate '±'
-set -g __fish_git_prompt_char_cleanstate ''
+set -g __fish_git_prompt_char_dirtystate '*'
 
 function parse_git_dirty
   if [ $__fish_git_prompt_showdirtystate = "yes" ]
@@ -59,8 +52,6 @@ function parse_git_dirty
     set git_dirty (command git status --porcelain $submodule_syntax $untracked_syntax 2> /dev/null)
     if [ -n "$git_dirty" ]
         echo -n "$__fish_git_prompt_char_dirtystate"
-    else
-        echo -n "$__fish_git_prompt_char_cleanstate"
     end
   end
 end
@@ -151,37 +142,31 @@ function prompt_git -d "display the current git state"
     set ref (command git symbolic-ref HEAD 2> /dev/null)
     if [ $status -gt 0 ]
       set -l branch (command git show-ref --head -s --abbrev |head -n1 2> /dev/null)
-      set ref "➦ $branch "
+      set ref "> $branch "
     end
-    set branch_symbol \uE0A0
-    set -l branch (echo $ref | sed  "s-refs/heads/-$branch_symbol -")
+    set -l branch (echo $ref | sed  "s-refs/heads/--")
     if [ "$dirty" != "" ]
       prompt_segment $color_git_dirty_bg $color_git_dirty_str "$branch $dirty"
     else
-      prompt_segment $color_git_bg $color_git_str "$branch $dirty"
+      prompt_segment $color_git_bg $color_git_str "$branch"
     end
   end
 end
 
 function prompt_status -d "symbols for nonzero exit code, root and background jobs"
-    if [ $RETVAL -ne 0 ]
-      prompt_segment $color_status_nonzero_bg $color_status_nonzero_str "✘"
-    end
+  if [ $RETVAL -ne 0 ]
+    prompt_segment $color_status_nonzero_bg $color_status_nonzero_str "X"
+  end
 
-    if [ "$fish_private_mode" ]
-      prompt_segment $color_status_private_bg $color_status_private_str "🔒"
-    end
+  if [ "$fish_private_mode" ]
+    prompt_segment $color_status_private_bg $color_status_private_str "#"
+  end
 
-    # if superuser (uid == 0)
-    set -l uid (id -u $USER)
-    if [ $uid -eq 0 ]
-      prompt_segment $color_status_superuser_bg $color_status_superuser_str "⚡"
-    end
-
-    # jobs display
-    if [ (jobs -l | wc -l) -gt 0 ]
-      prompt_segment $color_status_jobs_bg $color_status_jobs_str "⚙"
-    end
+  # if superuser (uid == 0)
+  set -l uid (id -u $USER)
+  if [ $uid -eq 0 ]
+    prompt_segment $color_status_superuser_bg $color_status_superuser_str "!"
+  end
 end
 
 # apply theme
