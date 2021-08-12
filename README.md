@@ -11,6 +11,8 @@ here is a list of all the things nullifidian **removes** from agnoster:
 
 if you need any of these things, you should use the original instead.
 
+![image](https://user-images.githubusercontent.com/12767408/129276836-ba6f45b8-a8b8-4e8f-a950-cd7eb9468221.png)
+
 ### install
 using [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish):
 ```
