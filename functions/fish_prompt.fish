@@ -3,6 +3,7 @@
 # forked from agnoster's theme - https://gist.github.com/3712874
 # ---
 
+set -g fish_prompt_pwd_dir_length 1
 set -g current_bg NONE
 set segment_separator \uE0B0
 
@@ -90,7 +91,7 @@ function prompt_git -d "display the current git state"
     set ref (command git symbolic-ref HEAD 2> /dev/null)
     if [ $status -gt 0 ]
       set -l branch (command git show-ref --head -s --abbrev |head -n1 2> /dev/null)
-      set ref "> $branch "
+      set ref "> $branch"
     end
     set -l branch (echo $ref | sed  "s-refs/heads/--")
     if [ "$dirty" != "" ]
